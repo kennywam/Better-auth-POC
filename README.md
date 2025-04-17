@@ -1,6 +1,6 @@
 # Better Auth POC
 
-A monorepo project demonstrating better authentication practices.
+A monorepo project demonstrating better-auth authentication implementation.
 
 ## Project Structure
 
