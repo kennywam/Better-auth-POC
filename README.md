@@ -23,18 +23,50 @@ packages/
 pnpm install
 ```
 
-### Development
+### Available Scripts
 
 ```bash
-# Start all services
-pnpm dev
+# Backend Development
+pnpm start:backend     # Start backend in development mode
+pnpm build:backend     # Build backend
+pnpm migrate:dev       # Run Prisma migrations
+pnpm generate:dev      # Generate Prisma client
+pnpm seed              # Run database seeding
+pnpm studio            # Open Prisma Studio
+pnpm db:push           # Push database changes
+pnpm email:dev         # Start email development server
 
-# Build all packages
-pnpm build
+# Frontend Development
+pnpm start:frontend    # Start frontend in development mode
+pnpm build:frontend    # Build frontend
+pnpm generate-types    # Generate TypeScript types
 
-# Run tests
-pnpm test
-
-# Run linting
-pnpm lint
+# Monorepo Commands
+pnpm build            # Build all packages
+pnpm lint             # Lint all packages
+pnpm prisma:generate  # Generate Prisma client
+pnpm release          # Create a new release
 ```
+
+### Development Workflow
+
+1. Start the backend:
+```bash
+pnpm start:backend
+```
+
+2. Start the frontend in a new terminal:
+```bash
+pnpm start:frontend
+```
+
+3. For database changes:
+```bash
+pnpm migrate:dev      # Create and apply migrations
+pnpm db:push         # Or push changes directly
+pnpm studio          # Open Prisma Studio to view/edit data
+```
+
+4. For email development:
+```bash
+pnpm email:dev       # Start email preview server
