@@ -13,10 +13,8 @@
     "start:frontend": "pnpm --filter @better-auth-poc/frontend dev",
     "seed": "pnpm --filter @better-auth-poc/backend prisma:seed",
     "studio": "pnpm --filter @better-auth-poc/backend prisma:studio",
-    "email:dev": "pnpm --filter @better-auth-poc/backend email:dev",
     "generate-types": "pnpm --filter @better-auth-poc/frontend generate-types",
     "prisma:generate": "pnpm --filter @better-auth-poc/backend prisma:generate",
-    "release": "release-it",
     "db:push": "pnpm --filter @better-auth-poc/backend db:push",
     "lint-staged": "lint-staged"
   },
@@ -27,6 +25,19 @@
   "devDependencies": {
     "@commitlint/cli": "^19.8.0",
     "@commitlint/config-conventional": "^19.8.0",
-    "lint-staged": "^15.5.1"
+    "@prisma/client": "^6.6.0",
+    "lint-staged": "^15.5.1",
+    "prisma": "^6.6.0"
+  },
+  "dependencies": {
+    "@fastify/compress": "^8.0.1",
+    "@fastify/multipart": "^9.0.3",
+    "@fastify/static": "^8.1.1",
+    "@nestjs/platform-fastify": "^11.0.20",
+    "@nestjs/swagger": "^11.1.4",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.14.1",
+    "fastify": "^5.3.0",
+    "nestjs-pino": "^4.4.0"
   }
 }
