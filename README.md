@@ -34,7 +34,6 @@ pnpm generate:dev      # Generate Prisma client
 pnpm seed              # Run database seeding
 pnpm studio            # Open Prisma Studio
 pnpm db:push           # Push database changes
-pnpm email:dev         # Start email development server
 
 # Frontend Development
 pnpm start:frontend    # Start frontend in development mode
@@ -45,7 +44,6 @@ pnpm generate-types    # Generate TypeScript types
 pnpm build            # Build all packages
 pnpm lint             # Lint all packages
 pnpm prisma:generate  # Generate Prisma client
-pnpm release          # Create a new release
 ```
 
 ### Development Workflow
@@ -66,7 +64,3 @@ pnpm migrate:dev      # Create and apply migrations
 pnpm db:push         # Or push changes directly
 pnpm studio          # Open Prisma Studio to view/edit data
 ```
-
-4. For email development:
-```bash
-pnpm email:dev       # Start email preview server
