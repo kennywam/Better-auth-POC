@@ -1,0 +1,34 @@
+{
+  "name": "better-auth-poc",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start:backend": "pnpm --filter @better-auth-poc/backend start:dev",
+    "build:backend": "pnpm --filter @better-auth-poc/backend build",
+    "build:frontend": "pnpm --filter @better-auth-poc/frontend build",
+    "build": "pnpm run --filter \"@better-auth-poc/*\" build",
+    "lint": "pnpm run --filter \"@better-auth-poc/*\" lint",
+    "migrate:dev": "pnpm --filter @better-auth-poc/backend prisma:migrate:dev",
+    "generate:dev": "pnpm --filter @better-auth-poc/backend prisma:generate",
+    "start:frontend": "pnpm --filter @better-auth-poc/frontend dev",
+    "seed": "pnpm --filter @better-auth-poc/backend prisma:seed",
+    "studio": "pnpm --filter @better-auth-poc/backend prisma:studio",
+    "email:dev": "pnpm --filter @better-auth-poc/backend email:dev",
+    "generate-types": "pnpm --filter @better-auth-poc/frontend generate-types",
+    "prisma:generate": "pnpm --filter @better-auth-poc/backend prisma:generate",
+    "prepare": "husky",
+    "release": "release-it",
+    "db:push": "pnpm --filter @better-auth-poc/backend db:push",
+    "lint-staged": "lint-staged"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=8.0.0"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^19.8.0",
+    "@commitlint/config-conventional": "^19.8.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^15.5.1"
+  }
+}
