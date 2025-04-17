@@ -16,7 +16,6 @@
     "email:dev": "pnpm --filter @better-auth-poc/backend email:dev",
     "generate-types": "pnpm --filter @better-auth-poc/frontend generate-types",
     "prisma:generate": "pnpm --filter @better-auth-poc/backend prisma:generate",
-    "prepare": "husky",
     "release": "release-it",
     "db:push": "pnpm --filter @better-auth-poc/backend db:push",
     "lint-staged": "lint-staged"
@@ -28,7 +27,6 @@
   "devDependencies": {
     "@commitlint/cli": "^19.8.0",
     "@commitlint/config-conventional": "^19.8.0",
-    "husky": "^9.1.7",
     "lint-staged": "^15.5.1"
   }
 }
