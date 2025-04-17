@@ -38,6 +38,9 @@
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.1",
     "fastify": "^5.3.0",
-    "nestjs-pino": "^4.4.0"
+    "nestjs-cls": "^5.4.2",
+    "nestjs-pino": "^4.4.0",
+    "prisma-extension-pagination": "^0.7.5",
+    "prisma-extension-soft-delete": "^2.0.1"
   }
 }

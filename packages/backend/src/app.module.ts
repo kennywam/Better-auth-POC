@@ -3,8 +3,11 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { LoggerModule } from 'nestjs-pino';
 import { LoggerMiddleware } from './middlewares/logger.middleware';
+import { PrismaModule } from './prisma/prisma.module';
+import { ClsModule } from 'nestjs-cls';
 @Module({
   imports: [
+    PrismaModule,
     LoggerModule.forRoot({
       pinoHttp: {
         customProps: () => ({
@@ -20,9 +23,19 @@ import { LoggerMiddleware } from './middlewares/logger.middleware';
         redact: ['req.headers.authorization', 'req.headers.cookie'],
       },
     }),
+    ClsModule.forRoot({
+      global: true,
+      middleware: {
+        mount: true,
+        setup: (cls, req) => {
+          cls.set('organizationId', req.headers['x-organization-id']);
+        },
+      },
+    }),
   ],
   controllers: [AppController],
   providers: [AppService],
+  exports: [PrismaModule],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
