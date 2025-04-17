@@ -5,6 +5,8 @@ import { LoggerModule } from 'nestjs-pino';
 import { LoggerMiddleware } from './middlewares/logger.middleware';
 import { PrismaModule } from './prisma/prisma.module';
 import { ClsModule } from 'nestjs-cls';
+import { OrganizationsModule } from './core/organizations/organizations.module';
+import { UsersModule } from './core/users/users.module';
 @Module({
   imports: [
     PrismaModule,
@@ -32,6 +34,8 @@ import { ClsModule } from 'nestjs-cls';
         },
       },
     }),
+    OrganizationsModule,
+    UsersModule,
   ],
   controllers: [AppController],
   providers: [AppService],
