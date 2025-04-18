@@ -19,20 +19,20 @@ model User {
   name           String   @map("full_name")
   email          String   @unique
   emailVerified  Boolean  @default(false) @map("email_verified")
-  image          String?  @map("image")
+  image          String?
   createdAt      DateTime @default(now()) @map("created_at")
   updatedAt      DateTime @updatedAt @map("updated_at")
   organizationId String   @map("organization_id")
 
   organization Organization @relation(fields: [organizationId], references: [id])
-  session      Session[]
-  account      Account[]
+  sessions     Session[]
+  accounts     Account[]
 }
 
 model Session {
   id        String   @id @default(uuid())
   userId    String   @map("user_id")
-  token     String
+  token     String   @unique
   expiresAt DateTime @map("expires_at")
   ipAddress String?  @map("ip_address")
   userAgent String?  @map("user_agent")
@@ -58,6 +58,8 @@ model Account {
   updatedAt             DateTime  @updatedAt @map("updated_at")
 
   user User @relation(fields: [userId], references: [id])
+
+  @@unique([providerId, accountId])
 }
 
 model Organization {
@@ -77,4 +79,7 @@ model Verification {
   expiresAt  DateTime @map("expires_at")
   createdAt  DateTime @default(now()) @map("created_at")
   updatedAt  DateTime @updatedAt @map("updated_at")
+
+  @@unique([identifier, value], name: "identifier_token")
+  @@index([expiresAt])
 }

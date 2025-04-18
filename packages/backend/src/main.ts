@@ -15,7 +15,7 @@ import { NestFactory, Reflector } from '@nestjs/core';
 import { AppModule } from './app.module';
 import multiPart from '@fastify/multipart';
 import compression from '@fastify/compress';
-
+import * as cookieParser from 'cookie-parser';
 async function bootstrap() {
   const app = await NestFactory.create<NestFastifyApplication>(
     AppModule,
@@ -61,6 +61,7 @@ async function bootstrap() {
 
   // pino error interceptor
   app.useGlobalInterceptors(new LoggerErrorInterceptor());
+  app.use(cookieParser());
 
   // Configure Swagger
   const config = new DocumentBuilder()
