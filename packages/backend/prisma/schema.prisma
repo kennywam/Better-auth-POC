@@ -5,14 +5,15 @@
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
 generator client {
-  provider        = "prisma-client-js"
-  binaryTargets   = ["native", "debian-openssl-3.0.x", "linux-musl-arm64-openssl-3.0.x"]
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "debian-openssl-3.0.x", "linux-musl-arm64-openssl-3.0.x"]
 }
 
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
 model User {
   id             String   @id @default(uuid())
   name           String   @map("full_name")
@@ -21,7 +22,7 @@ model User {
   image          String?  @map("image")
   createdAt      DateTime @default(now()) @map("created_at")
   updatedAt      DateTime @updatedAt @map("updated_at")
-  organizationId String   @unique @map("organization_id")
+  organizationId String   @map("organization_id")
 
   organization Organization @relation(fields: [organizationId], references: [id])
   session      Session[]
@@ -60,10 +61,11 @@ model Account {
 }
 
 model Organization {
-  id        String   @id @default(uuid())
-  name      String
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
 
   users User[]
 }
