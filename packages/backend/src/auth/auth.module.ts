@@ -33,7 +33,7 @@ import { AuthController } from './auth.controller';
             }),
             magicLink({
               sendMagicLink: async ({ email, token, url }) => {
-                // TODO: Implement your email sending logic here
+                // TODO: Implement email sending logic here
                 console.log('Magic link:', { email, token, url });
               },
               expiresIn: 900, // 15 minutes in seconds
