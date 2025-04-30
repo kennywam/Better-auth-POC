@@ -29,7 +29,15 @@ async function bootstrap() {
   // configure logger
   app.useLogger(app.get(Logger));
   await app.register(multiPart);
-  app.enableCors();
+  
+  // Configure CORS
+  app.enableCors({
+    origin: ['http://localhost:5000'],
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
+  });
+
   app.useGlobalPipes(
     new ValidationPipe({
       transform: true,
