@@ -17,7 +17,6 @@ export default function VerifyEmailPage() {
   const searchParams = useSearchParams();
   const token = searchParams.get('token');
 
-  // Function to verify email with token
   const verifyEmail = useCallback(async (verificationToken: string) => {
     try {
       setStatus('loading');
@@ -27,7 +26,7 @@ export default function VerifyEmailPage() {
         async () => {
           console.log(`Verifying email with token: ${verificationToken}`);
           
-          // Use our custom API endpoint to verify the email
+          // Use custom API endpoint to verify the email
           const response = await fetch(`/api/auth/verify-email/${verificationToken}`);
           
           if (!response.ok) {
@@ -76,18 +75,16 @@ export default function VerifyEmailPage() {
     }
   }, [router]);
 
-  // Use effect to verify email when token is available
   useEffect(() => {
     if (token) {
       verifyEmail(token);
     }
     
-    // Get the email from localStorage if available
     const storedEmail = localStorage.getItem('pendingVerificationEmail');
     if (storedEmail) {
       setUserEmail(storedEmail);
-      // Generate a test token for development purposes
-      setTestToken(`test-token-${Date.now()}`);
+      // Generate a test token for development purposes that includes the email
+      setTestToken(`test-token-${Date.now()}-${storedEmail}`);
     }
   }, [token, verifyEmail]);
 

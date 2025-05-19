@@ -367,28 +367,64 @@ export class AuthService {
       console.log('Verifying email with token:', token);
 
       if (token.startsWith('test-token-')) {
-        console.log(
-          'Development test token detected, bypassing actual verification',
-        );
-
-        // For development purposes, we'll simulate a successful verification
-        // In a production environment, you would never do this
-        const email = token.includes('@')
-          ? token.split('@')[0]
-          : 'test@example.com';
-
-        // Get user by email if it exists
+        console.log('Development test token detected, bypassing actual verification');
+        
+        const parts = token.split('-');
+        let email;
+        
+        if (parts.length > 2) {
+          const timestamp = parts[2];
+          const recentUsers = await this.prisma.user.findMany({
+            where: { 
+              emailVerified: false,
+              createdAt: {
+                gte: new Date(Date.now() - 60 * 60 * 1000)
+              }
+            },
+            orderBy: { createdAt: 'desc' },
+            take: 1
+          });
+          
+          if (recentUsers.length > 0) {
+            email = recentUsers[0].email;
+            console.log(`Found recent unverified user: ${email}`);
+          }
+        }
+        
+        if (!email && parts.length > 3) {
+          email = parts.slice(3).join('-');
+          console.log(`Extracted email from token: ${email}`);
+        }
+        
+        if (!email) {
+          email = 'test@example.com'; // Default fallback
+          console.log('Using default test email');
+        }
+        
         try {
-          const realUser = await this.prisma.user.findUnique({
+          let dbUser = await this.prisma.user.findUnique({
             where: { email },
           });
+          
+          if (!dbUser) {
+            const unverifiedUsers = await this.prisma.user.findMany({
+              where: { emailVerified: false },
+              orderBy: { createdAt: 'desc' },
+              take: 1
+            });
+            
+            if (unverifiedUsers.length > 0) {
+              dbUser = unverifiedUsers[0];
+              console.log(`Found unverified user: ${dbUser.email}`);
+            }
+          }
 
-          if (realUser) {
+          if (dbUser) {
+            // Update the emailVerified status
             const updatedUser = await this.prisma.user.update({
-              where: { id: realUser.id },
+              where: { id: dbUser.id },
               data: { emailVerified: true },
             });
-
             console.log(
               `Updated user ${updatedUser.email} emailVerified to true`,
             );
