@@ -75,7 +75,6 @@ async function bootstrap() {
 
   // pino error interceptor
   app.useGlobalInterceptors(new LoggerErrorInterceptor());
-  // Cookie handling is now done by the @fastify/cookie plugin
 
   // Configure Swagger
   const config = new DocumentBuilder()
