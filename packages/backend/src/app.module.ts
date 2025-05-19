@@ -8,9 +8,12 @@ import { ClsModule } from 'nestjs-cls';
 import { OrganizationsModule } from './core/organizations/organizations.module';
 import { UsersModule } from './core/users/users.module';
 import { AuthModule } from './auth/auth.module';
+import { CommonModule } from './common/common.module';
+import { RequestContextMiddleware } from './common/middlewares/request-context.middleware';
 @Module({
   imports: [
     PrismaModule,
+    CommonModule,
     LoggerModule.forRoot({
       pinoHttp: {
         customProps: () => ({
@@ -45,6 +48,8 @@ import { AuthModule } from './auth/auth.module';
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(LoggerMiddleware).forRoutes('*');
+    consumer
+      .apply(RequestContextMiddleware, LoggerMiddleware)
+      .forRoutes('*');
   }
 }

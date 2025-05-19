@@ -22,9 +22,9 @@ model User {
   image          String?
   createdAt      DateTime @default(now()) @map("created_at")
   updatedAt      DateTime @updatedAt @map("updated_at")
-  organizationId String   @map("organization_id")
+  organizationId String?  @map("organization_id")
 
-  organization Organization @relation(fields: [organizationId], references: [id])
+  organization Organization? @relation(fields: [organizationId], references: [id])
   sessions     Session[]
   accounts     Account[]
 }

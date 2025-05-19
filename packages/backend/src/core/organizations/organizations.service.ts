@@ -14,6 +14,22 @@ export class OrganizationsService {
     });
   }
 
+  /**
+   * Create a default organization for a user during registration
+   * @param name The name to use for the organization (defaults to user's name + "'s Organization")
+   * @returns The created organization
+   */
+  async createDefaultOrganization(name?: string): Promise<any> {
+    const orgName = name ? `${name}'s Organization` : 'Default Organization';
+    
+    return this.prisma.client.organization.create({
+      data: {
+        name: orgName,
+        description: 'Default organization created during user registration',
+      },
+    });
+  }
+
   findAll() {
     return this.prisma.client.organization.findMany({
       include: {

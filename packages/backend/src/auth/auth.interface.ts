@@ -3,14 +3,21 @@ export interface AuthResponse {
     id: string;
     email: string;
     name?: string;
-    image?: string;
+    image?: string | null;
     emailVerified: boolean;
-    createdAt: string;
-    updatedAt: string;
-  };
+    createdAt: string | Date;
+    updatedAt: string | Date;
+  } | null;
   session?: {
     token: string;
+  } | null;
+  error?: {
+    message: string;
+    status?: number;
+    statusText?: string;
+    details?: any;
   };
   status: boolean;
   message?: string;
+  callbackUrl?: string;
 }

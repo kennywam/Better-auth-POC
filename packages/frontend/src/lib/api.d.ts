@@ -84,6 +84,22 @@ export interface paths {
         patch: operations["UsersController_update"];
         trace?: never;
     };
+    "/api/auth/{path}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["AuthController_handleAuthRequest_get"];
+        put: operations["AuthController_handleAuthRequest_put"];
+        post: operations["AuthController_handleAuthRequest_post"];
+        delete: operations["AuthController_handleAuthRequest_delete"];
+        options: operations["AuthController_handleAuthRequest_options"];
+        head: operations["AuthController_handleAuthRequest_head"];
+        patch: operations["AuthController_handleAuthRequest_patch"];
+        trace?: never;
+    };
     "/auth/register": {
         parameters: {
             query?: never;
@@ -126,86 +142,6 @@ export interface paths {
         get: operations["AuthController_me"];
         put?: never;
         post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/auth/logout": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["AuthController_logout"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/auth/magic-link/send": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["AuthController_sendMagicLink"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/auth/magic-link/verify": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["AuthController_verifyMagicLink"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/auth/passkey/register": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["AuthController_registerPasskey"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/auth/passkey/authenticate": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["AuthController_authenticatePasskey"];
         delete?: never;
         options?: never;
         head?: never;
@@ -485,6 +421,146 @@ export interface operations {
             };
         };
     };
+    AuthController_handleAuthRequest_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Organization ID */
+                "x-organization-id"?: unknown;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AuthController_handleAuthRequest_put: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Organization ID */
+                "x-organization-id"?: unknown;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AuthController_handleAuthRequest_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Organization ID */
+                "x-organization-id"?: unknown;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AuthController_handleAuthRequest_delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Organization ID */
+                "x-organization-id"?: unknown;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AuthController_handleAuthRequest_options: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Organization ID */
+                "x-organization-id"?: unknown;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AuthController_handleAuthRequest_head: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Organization ID */
+                "x-organization-id"?: unknown;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AuthController_handleAuthRequest_patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Organization ID */
+                "x-organization-id"?: unknown;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     AuthController_register: {
         parameters: {
             query?: never;
@@ -538,106 +614,6 @@ export interface operations {
         requestBody?: never;
         responses: {
             200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AuthController_logout: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description Organization ID */
-                "x-organization-id"?: unknown;
-            };
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AuthController_sendMagicLink: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description Organization ID */
-                "x-organization-id"?: unknown;
-            };
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AuthController_verifyMagicLink: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description Organization ID */
-                "x-organization-id"?: unknown;
-            };
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AuthController_registerPasskey: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description Organization ID */
-                "x-organization-id"?: unknown;
-            };
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AuthController_authenticatePasskey: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description Organization ID */
-                "x-organization-id"?: unknown;
-            };
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            201: {
                 headers: {
                     [name: string]: unknown;
                 };

@@ -15,7 +15,7 @@ import { NestFactory, Reflector } from '@nestjs/core';
 import { AppModule } from './app.module';
 import multiPart from '@fastify/multipart';
 import compression from '@fastify/compress';
-import * as cookieParser from 'cookie-parser';
+import cookie from '@fastify/cookie';
 async function bootstrap() {
   const app = await NestFactory.create<NestFastifyApplication>(
     AppModule,
@@ -30,9 +30,15 @@ async function bootstrap() {
   app.useLogger(app.get(Logger));
   await app.register(multiPart);
   
+  // Register cookie plugin
+  await app.register(cookie, {
+    secret: process.env.COOKIE_SECRET || 'my-secret', // for signed cookies
+    hook: 'onRequest',
+  });
+  
   // Configure CORS
   app.enableCors({
-    origin: ['http://localhost:5000'],
+    origin: ['http://localhost:5000', 'http://localhost:3000'],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
@@ -69,7 +75,7 @@ async function bootstrap() {
 
   // pino error interceptor
   app.useGlobalInterceptors(new LoggerErrorInterceptor());
-  app.use(cookieParser());
+  // Cookie handling is now done by the @fastify/cookie plugin
 
   // Configure Swagger
   const config = new DocumentBuilder()
