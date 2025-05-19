@@ -70,7 +70,7 @@ export default function RegisterPage() {
       <Card className="w-[90%] max-w-md">
         <CardHeader>
           <CardTitle>Register</CardTitle>
-          <CardDescription>Create a new account</CardDescription>
+          <CardDescription>Create a new account (Organizations are created automatically on sign up)</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">

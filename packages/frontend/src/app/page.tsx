@@ -102,7 +102,7 @@ export default function Home() {
         <CardHeader>
           <CardTitle className="text-2xl text-center">Better Auth Demo</CardTitle>
           <CardDescription className="text-center">
-            {user ? `Welcome, ${user.name || user.email}!` : 'Test our authentication system'}
+            {user ? `Welcome, ${user.name || user.email}!` : 'Better-Auth demo with multi-tenant support'}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
