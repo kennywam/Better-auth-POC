@@ -26,23 +26,30 @@ export default function Dashboard() {
     const checkSession = async () => {
       try {
         setLoading(true)
-        const response = await fetch('/api/auth', {
+        console.log('Checking session in dashboard')
+        
+        const response = await fetch('/api/auth/session', {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
           },
+          credentials: 'include',
         })
+        
         const data = await response.json()
+        console.log('Session data:', data)
 
         if (data && data.user) {
+          console.log('User found in session:', data.user)
           setUser(data.user)
-          // Fetch organization data
+          
           try {
             const orgResponse = await fetch('/api/organization', {
               method: 'GET',
               headers: {
                 'Content-Type': 'application/json',
               },
+              credentials: 'include',
             })
             const orgData = await orgResponse.json()
             if (orgData && !('error' in orgData)) {
@@ -52,7 +59,7 @@ export default function Dashboard() {
             console.error('Failed to get organization:', error)
           }
         } else {
-          // Redirect to login if not authenticated
+          console.log('No user in session, redirecting to login')
           router.push('/auth/login')
         }
       } catch (error) {

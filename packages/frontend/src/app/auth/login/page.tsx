@@ -6,7 +6,6 @@ import Link from 'next/link';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { authClient } from "@/lib/auth";
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -21,27 +20,49 @@ export default function LoginPage() {
     setError(null);
 
     try {
-      const { data, error } = await authClient.signIn.email({
-        email,
-        password,
-        callbackURL: '/',
-        rememberMe: true
+      console.log('Attempting login with:', { email, callbackURL: '/' });
+      
+      const response = await fetch('/api/auth/sign-in/email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email,
+          password,
+          callbackURL: '/',
+          rememberMe: true
+        }),
+        credentials: 'include',
       });
-
-      if (error) {
-        // Check if the error is related to email verification
-        if (error.message === 'Email not verified' || error.code === 'EMAIL_NOT_VERIFIED') {
-          // Store the email for the verification page
+      
+      const result = await response.json();
+      console.log('Login response:', result);
+      
+      if (result.error) {
+        if (result.error.message === 'Email not verified' || 
+            result.error.message?.includes('verify') || 
+            result.error.code === 'EMAIL_NOT_VERIFIED') {
           localStorage.setItem('pendingVerificationEmail', email);
-          // Redirect to the verification page
           router.push('/auth/verify-email');
           return;
         }
-        setError(error.message || 'Authentication failed');
-      } else if (data) {
-        router.push('/dashboard');
+        setError(result.error.message || 'Authentication failed');
+      } else if (result.user) {
+        console.log('Login successful, redirecting to dashboard');
+        // Explicitly check if email is verified
+        if (result.user.emailVerified) {
+          router.push('/dashboard');
+        } else {
+          console.log('Email not verified, redirecting to verification page');
+          localStorage.setItem('pendingVerificationEmail', email);
+          router.push('/auth/verify-email');
+        }
+      } else {
+        setError('Login failed - no user returned');
       }
     } catch (err) {
+      console.error('Login error:', err);
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
       setLoading(false);

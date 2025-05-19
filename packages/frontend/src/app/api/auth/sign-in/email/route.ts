@@ -1,11 +1,20 @@
-import { auth } from "@/lib/auth";
 import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
+    console.log('Received sign-in request for:', body.email);
     
-    const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3000'}/auth/login`, {
+    let backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
+    if (!backendUrl) {
+      const host = request.headers.get('host')?.split(':')[0] || 'localhost';
+      backendUrl = `http://${host}:3000`;
+      console.log(`Using derived backend URL: ${backendUrl}`);
+    }
+    
+    console.log(`Sending sign-in request to backend: ${backendUrl}/api/auth/sign-in/email`);
+    
+    const response = await fetch(`${backendUrl}/api/auth/sign-in/email`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -13,30 +22,51 @@ export async function POST(request: Request) {
       body: JSON.stringify({
         email: body.email,
         password: body.password,
+        callbackURL: body.callbackURL || '/',
+        rememberMe: body.rememberMe || true
       }),
       credentials: 'include',
+    }).catch(err => {
+      console.error('Network error connecting to backend:', err);
+      throw new Error('Cannot connect to authentication server');
     });
 
-    const data = await response.json();
-    
     if (!response.ok) {
-      return NextResponse.json({ error: data.message || 'Login failed' }, { status: response.status });
+      console.error(`Backend returned error status: ${response.status}`);
+      const errorData = await response.json().catch(() => ({
+        error: { message: `Authentication failed with status ${response.status}` }
+      }));
+      
+      return NextResponse.json(
+        { error: errorData.error || { message: 'Authentication failed' } },
+        { status: response.status }
+      );
     }
 
-    // Use Better Auth to create a session
-    const signInResult = await auth.api.signInEmail({
-      body: {
-        email: body.email,
-        password: body.password,
-      },
-      headers: request.headers,
+    const data = await response.json().catch(err => {
+      console.error('Error parsing login response:', err);
+      throw new Error('Invalid response from authentication server');
     });
-
-    return NextResponse.json(signInResult);
+    
+    console.log('Login successful, setting cookies');
+    
+    const nextResponse = NextResponse.json(data);
+    
+    if (data.session?.token) {
+      nextResponse.cookies.set('session_token', data.session.token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        path: '/',
+        maxAge: 60 * 60 * 24 * 7, // 7 days
+      });
+    }
+    
+    return nextResponse;
   } catch (error) {
     console.error('Sign-in error:', error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Unknown error" },
+      { error: { message: error instanceof Error ? error.message : "Unknown error" } },
       { status: 500 }
     );
   }
