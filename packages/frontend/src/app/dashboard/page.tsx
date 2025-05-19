@@ -1,6 +1,6 @@
-'use client';
+'use client'
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import {
@@ -27,7 +27,7 @@ export default function Dashboard() {
       try {
         setLoading(true)
         console.log('Checking session in dashboard')
-        
+
         // Try our direct session endpoint first
         const response = await fetch('/api/auth/direct-session', {
           method: 'GET',
@@ -36,14 +36,14 @@ export default function Dashboard() {
           },
           credentials: 'include',
         })
-        
+
         const data = await response.json()
         console.log('Direct session data:', data)
 
         if (data && data.user) {
           console.log('User found in session:', data.user)
           setUser(data.user)
-          
+
           try {
             const orgResponse = await fetch('/api/organization', {
               method: 'GET',
@@ -61,13 +61,13 @@ export default function Dashboard() {
           }
         } else {
           console.log('No user in direct session, trying backup token')
-          
+
           // Try using the backup token from localStorage if available
           const backupToken = localStorage.getItem('session_token_backup')
-          
+
           if (backupToken) {
             console.log('Found backup token, trying to restore session')
-            
+
             try {
               const backupResponse = await fetch('/api/auth/manual-session', {
                 method: 'POST',
@@ -77,14 +77,14 @@ export default function Dashboard() {
                 body: JSON.stringify({ token: backupToken }),
                 credentials: 'include',
               })
-              
+
               const backupData = await backupResponse.json()
               console.log('Backup session response:', backupData)
-              
+
               if (backupData && backupData.user) {
                 console.log('Session restored from backup token')
                 setUser(backupData.user)
-                
+
                 // Try to get organization data
                 try {
                   const orgResponse = await fetch('/api/organization', {
@@ -99,16 +99,22 @@ export default function Dashboard() {
                     setOrganization(orgData)
                   }
                 } catch (error) {
-                  console.error('Failed to get organization with backup token:', error)
+                  console.error(
+                    'Failed to get organization with backup token:',
+                    error
+                  )
                 }
-                
+
                 return // Exit early since we restored the session
               }
             } catch (backupError) {
-              console.error('Failed to restore session from backup token:', backupError)
+              console.error(
+                'Failed to restore session from backup token:',
+                backupError
+              )
             }
           }
-          
+
           console.log('No valid session found, redirecting to login')
           router.push('/auth/login')
         }
@@ -125,16 +131,30 @@ export default function Dashboard() {
 
   const handleLogout = async () => {
     try {
-      await fetch('/api/auth', {
+      console.log('Logging out...');
+      
+      localStorage.removeItem('session_token_backup');
+      
+      const response = await fetch('/api/auth/sign-out', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ action: 'signOut' }),
-      })
-      router.push('/')
+        credentials: 'include',
+      });
+      
+      const result = await response.json();
+      console.log('Logout response:', result);
+      
+      if (result.success) {
+        console.log('Logout successful, redirecting to home page');
+        window.location.href = '/';
+      } else {
+        console.error('Logout failed:', result.error);
+      }
     } catch (error) {
-      console.error('Logout failed:', error)
+      console.error('Logout failed:', error);
+      window.location.href = '/';
     }
   }
 
@@ -156,12 +176,6 @@ export default function Dashboard() {
           {/* Header */}
           <div className='px-6 py-5 border-b border-gray-200 flex items-center justify-between'>
             <h1 className='text-2xl font-bold text-gray-900'>Dashboard</h1>
-            <Button
-              variant='outline'
-              onClick={() => router.push('/')}
-            >
-              Home
-            </Button>
           </div>
 
           {/* User Profile Section */}

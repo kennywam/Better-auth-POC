@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import type { User } from "@/lib/auth";
-import { getSession, signOut } from "@/lib/api";
+import { signOut } from "@/lib/api";
 
 export default function Home() {
   const [user, setUser] = useState<User | null>(null);
@@ -16,12 +16,54 @@ export default function Home() {
     const checkSession = async () => {
       try {
         setLoading(true);
-        const sessionData = await getSession();
+        // Try to get the session using our direct session endpoint for more reliability
+        const response = await fetch('/api/auth/direct-session', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
+          cache: 'no-store'
+        });
+        
+        const sessionData = await response.json();
+        
         if (sessionData && sessionData.user) {
+          console.log('User is logged in, redirecting to dashboard');
           setUser(sessionData.user);
           // Redirect to dashboard if user is logged in
           router.push('/dashboard');
+          return; // Exit early
         }
+        
+        // If direct session check fails, try the backup token
+        const backupToken = localStorage.getItem('session_token_backup');
+        if (backupToken) {
+          console.log('Found backup token, trying to restore session');
+          try {
+            const backupResponse = await fetch('/api/auth/manual-session', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ token: backupToken }),
+              credentials: 'include',
+            });
+            
+            const backupData = await backupResponse.json();
+            if (backupData && backupData.user) {
+              console.log('Session restored from backup token, redirecting to dashboard');
+              setUser(backupData.user);
+              router.push('/dashboard');
+              return; // Exit early
+            }
+          } catch (backupError) {
+            console.error('Failed to restore session from backup token:', backupError);
+          }
+        }
+        
+        // If we get here, user is not logged in
+        console.log('User is not logged in, showing home page');
       } catch (error) {
         console.error('Failed to get session:', error);
       } finally {
