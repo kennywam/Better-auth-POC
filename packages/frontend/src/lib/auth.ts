@@ -40,7 +40,7 @@ export const auth = betterAuth({
 
 // Create the client-side auth instance
 export const authClient = createAuthClient({
-  baseURL: process.env.NEXT_PUBLIC_AUTH_URL || 'http://localhost:3000',
+  baseURL: process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3000',
   fetchOptions: {
     credentials: 'include',
     onError(e) {

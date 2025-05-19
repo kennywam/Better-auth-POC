@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import type { User } from "@/lib/auth";
+import { getSession, signOut } from "@/lib/api";
 
 export default function Home() {
   const [user, setUser] = useState<User | null>(null);
@@ -15,15 +16,9 @@ export default function Home() {
     const checkSession = async () => {
       try {
         setLoading(true);
-        const response = await fetch('/api/auth', {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        });
-        const data = await response.json();
-        if (data && !('error' in data) && data.user) {
-          setUser(data.user);
+        const sessionData = await getSession();
+        if (sessionData && sessionData.user) {
+          setUser(sessionData.user);
           // Redirect to dashboard if user is logged in
           router.push('/dashboard');
         }
@@ -38,15 +33,11 @@ export default function Home() {
 
   const handleLogout = async () => {
     try {
-      await fetch('/api/auth', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ action: 'signOut' }),
-      });
-      setUser(null);
-      window.location.reload();
+      const success = await signOut();
+      if (success) {
+        setUser(null);
+        window.location.reload();
+      }
     } catch (error) {
       console.error('Logout failed:', error);
     }
