@@ -18,7 +18,9 @@ export async function fetchFromApi<T = unknown>(endpoint: string, options: Reque
     credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
+      'Accept': 'application/json',
     },
+    mode: 'cors',
   };
 
   const response = await fetch(url, {
@@ -45,7 +47,7 @@ export async function fetchFromApi<T = unknown>(endpoint: string, options: Reque
  */
 export async function getSession(): Promise<{ user?: User } | null> {
   try {
-    return await fetchFromApi('auth/session');
+    return await fetchFromApi('api/auth/session');
   } catch (error) {
     console.error('Failed to get session:', error);
     return null;
@@ -58,7 +60,7 @@ export async function getSession(): Promise<{ user?: User } | null> {
  */
 export async function getUserOrganization() {
   try {
-    return await fetchFromApi('auth/organization');
+    return await fetchFromApi('api/auth/organization');
   } catch (error) {
     console.error('Failed to get organization:', error);
     return null;
@@ -71,7 +73,7 @@ export async function getUserOrganization() {
  */
 export async function signOut(): Promise<boolean> {
   try {
-    await fetchFromApi('auth/sign-out', {
+    await fetchFromApi('api/auth/sign-out', {
       method: 'POST',
     });
     return true;
