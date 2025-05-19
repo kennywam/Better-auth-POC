@@ -48,6 +48,23 @@ import { OrganizationsService } from '../core/organizations/organizations.servic
             minPasswordLength: 8,
             requireEmailVerification: true,
           },
+          emailVerification: {
+            sendOnSignUp: true,
+            autoSignInAfterVerification: true,
+            sendVerificationEmail: async ({ user, url, token }, request) => {
+              // In a production environment, you would send an actual email
+              console.log('Verification email details:', {
+                to: user.email,
+                subject: 'Verify your email address',
+                verificationUrl: url,
+                verificationToken: token
+              });
+              
+              // For development, log the verification URL
+              console.log(`Development verification URL: ${url}`);
+              console.log(`Development verification token: ${token}`);
+            }
+          },
           jwt: {
             secret: process.env.JWT_SECRET || 'your-secret-key',
             expiresIn: 604800, // 7 days in seconds

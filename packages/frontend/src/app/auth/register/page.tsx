@@ -1,10 +1,13 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { authClient } from "@/lib/auth";
+import Link from 'next/link';
 
 export default function RegisterPage() {
   const [name, setName] = useState('');
@@ -12,6 +15,7 @@ export default function RegisterPage() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -19,19 +23,42 @@ export default function RegisterPage() {
     setError(null);
 
     try {
-      const { data, error } = await authClient.signUp.email({
-        email,
-        password,
-        name,
-        callbackURL: '/'
-      });
+      toast.promise(
+        async () => {
+          const { data, error } = await authClient.signUp.email({
+            email,
+            password,
+            name,
+            callbackURL: `${window.location.origin}/auth/verify-email`
+          });
 
-      if (error) {
-        setError(error.message || 'Registration failed');
-      } else if (data) {
-        window.location.href = '/';
-      }
+          if (error) {
+            throw new Error(error.message || 'Registration failed');
+          }
+          
+          // Store the email for verification page
+          localStorage.setItem('pendingVerificationEmail', email);
+          
+          // Return data for the toast success message
+          return data;
+        },
+        {
+          loading: 'Creating your account...',
+          success: () => {
+            // Redirect to verification page after successful registration
+            setTimeout(() => {
+              router.push('/auth/verify-email');
+            }, 1000);
+            return 'Account created! Please verify your email.';
+          },
+          error: (err) => {
+            setError(err.message || 'Registration failed');
+            return err.message || 'Registration failed';
+          },
+        }
+      );
     } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'An error occurred');
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
       setLoading(false);
@@ -87,6 +114,12 @@ export default function RegisterPage() {
               {loading ? 'Creating account...' : 'Create account'}
             </Button>
           </form>
+          <p className="text-sm text-center">
+            Already have an account?
+            <Link href="/auth/login" className="text-blue-500 hover:underline">
+              Login
+            </Link>
+          </p>
         </CardContent>
       </Card>
     </div>

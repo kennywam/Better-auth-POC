@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -28,6 +29,14 @@ export default function LoginPage() {
       });
 
       if (error) {
+        // Check if the error is related to email verification
+        if (error.message === 'Email not verified' || error.code === 'EMAIL_NOT_VERIFIED') {
+          // Store the email for the verification page
+          localStorage.setItem('pendingVerificationEmail', email);
+          // Redirect to the verification page
+          router.push('/auth/verify-email');
+          return;
+        }
         setError(error.message || 'Authentication failed');
       } else if (data) {
         router.push('/dashboard');
@@ -79,6 +88,12 @@ export default function LoginPage() {
               {loading ? 'Signing in...' : 'Sign in'}
             </Button>
           </form>
+          <p className="text-sm text-center">
+            Don&apos;t have an account?
+            <Link href="/auth/register" className="text-blue-500 hover:underline">
+              Register
+            </Link>
+          </p>
         </CardContent>
       </Card>
     </div>

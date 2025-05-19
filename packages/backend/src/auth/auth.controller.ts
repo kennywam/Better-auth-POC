@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Req, Res, UnauthorizedException } from '@nestjs/common';
+import { Body, Controller, Get, Post, Req, Res, UnauthorizedException, Param } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { FastifyRequest, FastifyReply } from 'fastify';
 
@@ -175,6 +175,45 @@ export class AuthController {
     } catch (error) {
       console.error('Session error:', error);
       throw new UnauthorizedException('Invalid session');
+    }
+  }
+
+  @Get('auth/verify-email/:token')
+  async verifyEmail(
+    @Param('token') token: string,
+    @Res({ passthrough: true }) response: FastifyReply,
+  ) {
+    try {
+      console.log('Verifying email with token:', token);
+      const result = await this.authService.verifyMagicLink(token);
+
+      if (!result.status || !result.user || !result.session) {
+        console.log('Verification failed:', result);
+        throw new UnauthorizedException(result.message || 'Email verification failed');
+      }
+
+      console.log('Verification successful:', {
+        user: result.user,
+        sessionToken: result.session.token ? 'exists' : 'missing'
+      });
+
+      // Set session cookie
+      response.setCookie('session_token', result.session.token, {
+        httpOnly: true,
+        secure: true,
+        sameSite: 'lax',
+        path: '/',
+        maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+      });
+
+      return {
+        status: true,
+        message: 'Email verified successfully',
+        user: result.user,
+      };
+    } catch (error) {
+      console.error('Email verification error:', error);
+      throw new UnauthorizedException(error instanceof Error ? error.message : 'Email verification failed');
     }
   }
 }
