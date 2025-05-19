@@ -1,9 +1,17 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from "next/server";
 
-export async function GET(request: NextRequest) {
+export async function GET(request: Request) {
   try {
-    console.log('Session API route called');
-    const sessionToken = request.cookies.get('session_token')?.value;
+    // Get the session token from cookies
+    const cookieHeader = request.headers.get('cookie');
+    const cookies = cookieHeader ? Object.fromEntries(
+      cookieHeader.split(';').map(cookie => {
+        const [key, value] = cookie.trim().split('=');
+        return [key, value];
+      })
+    ) : {};
+    
+    const sessionToken = cookies.session_token;
     
     if (!sessionToken) {
       console.log('No session token found in cookies');
@@ -13,8 +21,9 @@ export async function GET(request: NextRequest) {
     console.log('Session token found:', sessionToken.substring(0, 5) + '...');
     
     const backendUrl = 'http://localhost:3000';
-    console.log(`Fetching session from backend: ${backendUrl}/api/auth/direct-session`);
+    console.log(`Fetching direct session from backend: ${backendUrl}/api/auth/direct-session`);
     
+    // Try both with and without Bearer prefix to maximize chances of success
     const response = await fetch(`${backendUrl}/api/auth/direct-session`, {
       method: 'GET',
       headers: {
@@ -43,10 +52,10 @@ export async function GET(request: NextRequest) {
       throw new Error('Invalid response from backend server');
     });
     
-    console.log('Session data from backend:', JSON.stringify(data));
+    console.log('Direct session data from backend:', JSON.stringify(data));
     
     if (!data || !data.user) {
-      console.log('No user found in session response');
+      console.log('No user found in direct session response');
       return NextResponse.json({ user: null, session: null });
     }
     
@@ -65,12 +74,12 @@ export async function GET(request: NextRequest) {
     
     return nextResponse;
   } catch (error) {
-    console.error('Error fetching session:', error);
+    console.error('Error fetching direct session:', error);
     return NextResponse.json(
       { 
         user: null, 
         session: null, 
-        error: error instanceof Error ? error.message : 'Failed to fetch session' 
+        error: error instanceof Error ? error.message : 'Unknown error' 
       },
       { status: 500 }
     );

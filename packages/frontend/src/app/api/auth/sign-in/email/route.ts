@@ -49,10 +49,14 @@ export async function POST(request: Request) {
     });
     
     console.log('Login successful, setting cookies');
+    console.log('Session data:', JSON.stringify(data.session));
     
+    // Create a response with the session data
     const nextResponse = NextResponse.json(data);
     
+    // Make sure we set the session token cookie
     if (data.session?.token) {
+      console.log('Setting session cookie with token:', data.session.token.substring(0, 5) + '...');
       nextResponse.cookies.set('session_token', data.session.token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
@@ -60,6 +64,8 @@ export async function POST(request: Request) {
         path: '/',
         maxAge: 60 * 60 * 24 * 7, // 7 days
       });
+    } else {
+      console.warn('No session token found in login response');
     }
     
     return nextResponse;

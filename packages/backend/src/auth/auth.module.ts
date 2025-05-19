@@ -2,6 +2,7 @@ import { Module, MiddlewareConsumer, NestModule } from '@nestjs/common';
 import { betterAuth } from 'better-auth';
 import { passkey } from 'better-auth/plugins/passkey';
 import { magicLink } from 'better-auth/plugins';
+import { SessionStore } from './session.store';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
@@ -12,6 +13,7 @@ import { OrganizationsService } from '../core/organizations/organizations.servic
 
 @Module({
   providers: [
+    SessionStore,
     {
       provide: 'BETTER_AUTH',
       useFactory: (prisma: PrismaService, organizationsService: OrganizationsService) => {
@@ -96,9 +98,9 @@ import { OrganizationsService } from '../core/organizations/organizations.servic
 })
 export class AuthModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    // Apply auth middleware to protected routes
+    // Apply auth middleware to protected routes, but NOT to the session endpoint
     consumer
       .apply(AuthMiddleware)
-      .forRoutes('api/auth/session', 'api/auth/sign-out');
+      .forRoutes('api/auth/sign-out', 'api/protected');
   }
 }

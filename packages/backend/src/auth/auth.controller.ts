@@ -1,10 +1,15 @@
-import { Body, Controller, Get, Post, Req, Res, UnauthorizedException, Param } from '@nestjs/common';
+import { Body, Controller, Get, Inject, Post, Req, Res, UnauthorizedException, Param } from '@nestjs/common';
 import { AuthService } from './auth.service';
+import { SessionStore } from './session.store';
 import { FastifyRequest, FastifyReply } from 'fastify';
 
 @Controller('api')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    @Inject('BETTER_AUTH') private readonly auth: any,
+    private readonly sessionStore: SessionStore
+  ) {}
 
 
   @Post('auth/sign-up/email')
@@ -12,12 +17,10 @@ export class AuthController {
     try {
       console.log('Processing sign-up request:', { email: body.email, name: body.name, callbackURL: body.callbackURL });
       
-      // Log the full request body for debugging
       console.log('Full request body:', body);
       
       const result = await this.authService.registerWithEmail(body.email, body.password, body.name);
       
-      // Log the result for debugging
       console.log('Registration result:', JSON.stringify(result, null, 2));
       
       if (!result?.user) {
@@ -59,6 +62,12 @@ export class AuthController {
         return { error: { message: 'Login failed - no user returned' } };
       }
       
+      // Store session in our custom session store for more reliable session handling
+      if (result.session?.token && result.user.id) {
+        console.log('Storing session in custom session store');
+        await this.sessionStore.storeSession(result.session.token, result.user.id, result.user);
+      }
+      
       // Set session cookie
       if (result.session?.token) {
         console.log('Setting session cookie with token');
@@ -88,26 +97,250 @@ export class AuthController {
   @Get('auth/session')
   async getSession(@Req() req: FastifyRequest) {
     try {
-      const token = req.cookies?.session_token;
+      console.log('Session request received');
+      console.log('Headers:', JSON.stringify(req.headers));
+      
+      let token: string | undefined = undefined;
+      
+      const authHeader = req.headers.authorization as string | undefined;
+      if (authHeader) {
+        if (authHeader.startsWith('Bearer ')) {
+          token = authHeader.substring(7); // Remove 'Bearer ' prefix
+          console.log('Found token in Authorization header');
+        } else {
+          token = authHeader;
+          console.log('Found raw token in Authorization header');
+        }
+      }
+      
+      if (!token && req.cookies && req.cookies.session_token) {
+        token = req.cookies.session_token;
+        console.log('Found token in cookies');
+      }
+      
       if (!token) {
+        console.log('No session token found');
         return { user: null, session: null };
       }
-
+      
+      console.log('Getting user session with token:', token.substring(0, 5) + '...');
       const result = await this.authService.getUser(token);
+      
+      console.log('Session result:', {
+        status: result.status,
+        hasUser: !!result.user,
+        hasSession: !!result.session
+      });
+      
       return result;
     } catch (error) {
       console.error('Session error:', error);
-      return { user: null, session: null };
+      return { 
+        user: null, 
+        session: null,
+        error: error instanceof Error ? error.message : 'Unknown session error'
+      };
     }
   }
   
+  @Get('auth/direct-session')
+  async getDirectSession(@Req() req: FastifyRequest) {
+    try {
+      console.log('Direct session check requested');
+      
+      // Extract token from request
+      let token: string | undefined = undefined;
+      
+      // Try Authorization header first
+      const authHeader = req.headers.authorization as string | undefined;
+      if (authHeader) {
+        // Handle both formats
+        if (authHeader.startsWith('Bearer ')) {
+          token = authHeader.substring(7);
+        } else {
+          token = authHeader;
+        }
+        console.log('Found token in Authorization header');
+      }
+      
+      // Then try cookies
+      if (!token && req.cookies && req.cookies.session_token) {
+        token = req.cookies.session_token;
+        console.log('Found token in cookies');
+      }
+      
+      if (!token) {
+        console.log('No session token found');
+        return { user: null, session: null };
+      }
+      
+      console.log('Checking token in session store:', token.substring(0, 5) + '...');
+      
+      // Check if this is a development test token
+      if (token.startsWith('test-token-')) {
+        console.log('Development test token detected');
+        const email = token.replace('test-token-', '');
+        
+        return {
+          status: true,
+          message: 'Development session active',
+          user: {
+            id: 'dev-user-id',
+            email: email || 'dev@example.com',
+            name: 'Development User',
+            emailVerified: true,
+            createdAt: new Date(),
+            updatedAt: new Date()
+          },
+          session: { token }
+        };
+      }
+      
+      // First check our custom session store
+      const sessionData = await this.sessionStore.getSession(token);
+      if (sessionData && sessionData.userData) {
+        console.log('Found session in custom store for user:', sessionData.userData.email);
+        
+        return {
+          status: true,
+          message: 'Session active via custom store',
+          user: sessionData.userData,
+          session: { token }
+        };
+      }
+      
+      // Check if this is a session in our database
+      if (token.startsWith('session-') || token.startsWith('dev-session-')) {
+        try {
+          const session = await this.authService['prisma'].session.findFirst({
+            where: { token },
+            include: { user: true }
+          });
+          
+          if (session && session.user) {
+            console.log('Found session in database for user:', session.user.email);
+            
+            // Check if the session is expired
+            if (session.expiresAt && new Date(session.expiresAt) < new Date()) {
+              console.log('Session expired');
+              return {
+                status: false,
+                message: 'Session expired',
+                user: null,
+                session: null
+              };
+            }
+            
+            // Store in our custom session store for future lookups
+            await this.sessionStore.storeSession(token, session.user.id, session.user);
+            
+            return {
+              status: true,
+              message: 'Session active',
+              user: {
+                id: session.user.id,
+                email: session.user.email,
+                name: session.user.name || '',
+                emailVerified: session.user.emailVerified,
+                createdAt: session.user.createdAt,
+                updatedAt: session.user.updatedAt,
+                image: session.user.image
+              },
+              session: { token: session.token }
+            };
+          }
+        } catch (dbError) {
+          console.error('Error checking database for session:', dbError);
+        }
+      }
+      
+      // Try Better Auth with token
+      try {
+        console.log('Trying Better Auth with token:', token.substring(0, 5) + '...');
+        
+        // Call Better Auth API directly with the token
+        try {
+          const result = await this.auth.api.getSession({
+            headers: new Headers({
+              Authorization: `Bearer ${token}`,
+            }),
+          });
+          
+          if (result) {
+            console.log('Better Auth direct API response:', {
+              status: result.status,
+              hasUser: !!result.user,
+              hasSession: !!result.session
+            });
+            
+            if (result.user) {
+              // Store in our custom session store for future lookups
+              await this.sessionStore.storeSession(token, result.user.id, result.user);
+              
+              return {
+                status: true,
+                message: 'Session active via Better Auth',
+                user: result.user,
+                session: { token }
+              };
+            }
+          } else {
+            console.log('Better Auth returned null or undefined result');
+          }
+        } catch (innerError) {
+          console.error('Error calling Better Auth getSession directly:', innerError);
+        }
+        
+        // Fallback to our service method
+        const serviceResult = await this.authService.getUser(token);
+        
+        // If successful, store in our custom session store
+        if (serviceResult.user) {
+          await this.sessionStore.storeSession(token, serviceResult.user.id, serviceResult.user);
+        }
+        
+        return serviceResult;
+      } catch (authError) {
+        console.error('Better Auth session check failed:', authError);
+        return { 
+          status: false,
+          message: 'Invalid session',
+          user: null, 
+          session: null 
+        };
+      }
+    } catch (error) {
+      console.error('Direct session check error:', error);
+      return { 
+        status: false,
+        message: 'Session check failed',
+        user: null, 
+        session: null 
+      };
+    }
+  }
+
   @Post('auth/sign-out')
   async signOut(@Req() req: FastifyRequest, @Res({ passthrough: true }) res: FastifyReply) {
     try {
-      const token = req.cookies?.session_token;
-      if (token) {
-        await this.authService.logout(token);
+      let token: string | undefined = undefined;
+      const authHeader = req.headers.authorization as string | undefined;
+      if (authHeader && authHeader.startsWith('Bearer ')) {
+        token = authHeader.substring(7); // Remove 'Bearer ' prefix
       }
+      
+      if (!token && req.cookies?.session_token) {
+        token = req.cookies.session_token;
+      }
+      
+      if (!token) {
+        console.log('No session token found');
+        return { success: true };
+      }
+      
+      console.log('Logging out with token:', token.substring(0, 5) + '...');
+      await this.authService.logout(token);
+      
       res.clearCookie('session_token');
       return { success: true };
     } catch (error) {
@@ -141,7 +374,6 @@ export class AuthController {
         throw new UnauthorizedException('Login failed');
       }
       
-      // Set session cookie
       if (result.session?.token) {
         res.setCookie('session_token', result.session.token, {
           httpOnly: true,
@@ -197,7 +429,6 @@ export class AuthController {
         sessionToken: result.session.token ? 'exists' : 'missing'
       });
 
-      // Set session cookie
       response.setCookie('session_token', result.session.token, {
         httpOnly: true,
         secure: true,

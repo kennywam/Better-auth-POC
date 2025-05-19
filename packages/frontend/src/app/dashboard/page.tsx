@@ -28,7 +28,8 @@ export default function Dashboard() {
         setLoading(true)
         console.log('Checking session in dashboard')
         
-        const response = await fetch('/api/auth/session', {
+        // Try our direct session endpoint first
+        const response = await fetch('/api/auth/direct-session', {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
@@ -37,7 +38,7 @@ export default function Dashboard() {
         })
         
         const data = await response.json()
-        console.log('Session data:', data)
+        console.log('Direct session data:', data)
 
         if (data && data.user) {
           console.log('User found in session:', data.user)
@@ -59,7 +60,56 @@ export default function Dashboard() {
             console.error('Failed to get organization:', error)
           }
         } else {
-          console.log('No user in session, redirecting to login')
+          console.log('No user in direct session, trying backup token')
+          
+          // Try using the backup token from localStorage if available
+          const backupToken = localStorage.getItem('session_token_backup')
+          
+          if (backupToken) {
+            console.log('Found backup token, trying to restore session')
+            
+            try {
+              const backupResponse = await fetch('/api/auth/manual-session', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ token: backupToken }),
+                credentials: 'include',
+              })
+              
+              const backupData = await backupResponse.json()
+              console.log('Backup session response:', backupData)
+              
+              if (backupData && backupData.user) {
+                console.log('Session restored from backup token')
+                setUser(backupData.user)
+                
+                // Try to get organization data
+                try {
+                  const orgResponse = await fetch('/api/organization', {
+                    method: 'GET',
+                    headers: {
+                      'Content-Type': 'application/json',
+                    },
+                    credentials: 'include',
+                  })
+                  const orgData = await orgResponse.json()
+                  if (orgData && !('error' in orgData)) {
+                    setOrganization(orgData)
+                  }
+                } catch (error) {
+                  console.error('Failed to get organization with backup token:', error)
+                }
+                
+                return // Exit early since we restored the session
+              }
+            } catch (backupError) {
+              console.error('Failed to restore session from backup token:', backupError)
+            }
+          }
+          
+          console.log('No valid session found, redirecting to login')
           router.push('/auth/login')
         }
       } catch (error) {
